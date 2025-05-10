@@ -9,17 +9,21 @@ app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json()
-    review = data.get("review", "")
+    # Lire du texte brut envoyé avec Content-Type: text/plain
+    review = request.data.decode('utf-8')
 
-    # Transformer l'avis en vecteur
+    # Vectorisation
     review_vectorized = vectorizer.transform([review])
 
-    # Prédire le sentiment
+    # Prédiction
     prediction = model.predict(review_vectorized)
     result = "Positive" if prediction[0] == 1 else "Negative"
 
-    return jsonify({"review": review, "prediction": result})
+    # Réponse JSON
+    return jsonify({
+        "review": review,
+        "prediction": result
+    })
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
