@@ -5,12 +5,20 @@ import joblib
 model = joblib.load('logistic_regression_model.joblib')
 vectorizer = joblib.load('vectorizer_reviews.joblib')
 
+# Initialiser l'application Flask
 app = Flask(__name__)
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Lire du texte brut envoyé avec Content-Type: text/plain
-    review = request.data.decode('utf-8')
+    # Lire le champ "review" depuis multipart/form-data
+    review = request.form.get('review', '')
+
+    if not review:
+        return jsonify({
+            "error": "Missing 'review' field in multipart form data",
+            "review": review,
+            "prediction": None
+        }), 400
 
     # Vectorisation
     review_vectorized = vectorizer.transform([review])
@@ -19,11 +27,12 @@ def predict():
     prediction = model.predict(review_vectorized)
     result = "Positive" if prediction[0] == 1 else "Negative"
 
-    # Réponse JSON
+    # Retourner la réponse JSON
     return jsonify({
         "review": review,
         "prediction": result
     })
 
+# Lancer le serveur (non utilisé sur Render, mais utile en local)
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
